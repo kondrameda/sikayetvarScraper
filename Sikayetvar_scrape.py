@@ -4,10 +4,9 @@ import pandas as pd
 from pandas import DataFrame
 from bs4 import BeautifulSoup
 import csv
-
+import json
 
 #çıktı json veya veritabanı olarak olacak
-#
 
 def get_source(url):
 #It pulls the source code of the page whose url is given in xml format.
@@ -16,7 +15,6 @@ def get_source(url):
             return BeautifulSoup(r.content, "lxml")
         else:
             return False
-
 
 def go_page_with_keyword(keyword): # gerek olmayabilir
 
@@ -101,7 +99,6 @@ def get_complaint_date(source):
     except:
         return "Şikayet yayından kaldırılmış"
 
-
 def get_complaint_p(source):
 
     try:
@@ -112,27 +109,33 @@ def get_complaint_p(source):
     except:
         return "Şikayet yayından kaldırılmış"
 
-keyword = input("Marka veya kategori giriniz: ")
 
-#go_page_with_keyword(keyword)
+def main_func(keyword):
 
-search_url = f"https://www.sikayetvar.com/{keyword}"
+    search_url = f"https://www.sikayetvar.com/{keyword}"
 
-search_page_content = get_source(search_url)
+    search_page_content = get_source(search_url)
+
+    total_page = find_total_page(search_page_content)
+
+    all_links = get_all_complaint_links(get_pages_links(search_url, 10), links_list)
+
+    get_all_content(all_links)
+
+    df = DataFrame.from_dict(complaints_dict,orient = 'index', columns = ["Baslik", "yazar", "tarih", "sikayet"])  
+    df.to_csv("sikayetvar.csv",index = False)
+
+    return json.dumps(complaints_dict, indent = 4) 
 
 
-links_list = []
+if __name__ == "__main__":
 
-complaints_dict = {}
+    links_list = []
 
-complaint_links = []
+    complaints_dict = {}
 
-total_page = find_total_page(search_page_content)
-print(total_page)
+    complaint_links = []
 
-all_links = get_all_complaint_links(get_pages_links(search_url, 10), links_list)
+    keyword = input("Marka veya kategori giriniz: ")
 
-get_all_content(all_links)
-
-df = DataFrame.from_dict(complaints_dict,orient = 'index', columns = ["Baslik", "yazar", "tarih", "sikayet"])  
-df.to_csv("sikayetvar.csv",index = False)
+    print(main_func(keyword))
